@@ -1,0 +1,39 @@
+#include "mbed.h"
+#include "TextLCD-master/TextLCD.h" // Your specified LCD library
+
+// I2C bus declaration, using the standard Nucleo pins
+I2C i2c_lcd(D14, D15); // sda, scl
+// Analog input for the LM35 temperature sensor
+AnalogIn tempSensor(A0);
+
+int main() {
+    // 1. Initialize the LCD object
+    TextLCD_I2C lcd(&i2c_lcd, (0x27 << 1), TextLCD::LCD16x2);
+
+    // Create a character buffer to hold the formatted temperature string
+    char buffer[17]; 
+
+    // 2. Clear the LCD and print a static title on the first line
+    lcd.cls();
+    lcd.locate(0, 0);
+    lcd.printf("Temperature:");
+
+    // 3. The infinite loop now reads the sensor and updates the display
+    while (true) {
+        // --- Read and Calculate Temperature from LM35 ---
+        float rawValue = tempSensor.read();
+        float voltage = rawValue * 2.0;
+        float temperatureC = voltage * 100.0;
+
+        // --- Display Temperature on LCD's Second Line ---
+        // First, format the temperature into our character buffer
+        sprintf(buffer, "%.2f C", temperatureC);
+        
+        // Second, print the buffer as a simple string to the LCD
+        lcd.locate(0, 1);
+        lcd.printf("%-16s", buffer); // Pads with spaces to clear old text
+
+        // Wait for 1 second before taking the next reading
+        ThisThread::sleep_for(1s);
+    }
+}
